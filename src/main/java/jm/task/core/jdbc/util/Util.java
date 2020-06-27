@@ -25,7 +25,7 @@ public class Util {
         return DriverManager.getConnection(url, userName, password);
     }
 
-    public static SessionFactory getSessionFactory() {                                                //Hibernate
+    public static SessionFactory getSessionFactory() {
         Configuration configuration = Util.getMySqlConfiguration();
         StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
         builder.applySettings(configuration.getProperties());
@@ -36,13 +36,13 @@ public class Util {
     private static Configuration getMySqlConfiguration() {
         Configuration configuration = new Configuration();
         configuration.addAnnotatedClass(User.class);
-        configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
         configuration.setProperty("hibernate.connection.url",
                 "jdbc:mysql://localhost:3306/mydb1?serverTimezone=Europe/Moscow&useSSL=false");
         configuration.setProperty("hibernate.connection.username", "root");
         configuration.setProperty("hibernate.connection.password", "zxc123");
         configuration.setProperty("hibernate.show_sql", "true");
-        configuration.setProperty("hibernate.hbm2ddl.auto", "update");
+        configuration.setProperty("hibernate.hbm2ddl.auto", "create");
         return configuration;
     }
- }
+}

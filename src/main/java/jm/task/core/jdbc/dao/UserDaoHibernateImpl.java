@@ -2,14 +2,17 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
+
+    SessionFactory sessionFactory = Util.getSessionFactory();
 
     public UserDaoHibernateImpl() {
 
@@ -17,14 +20,14 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void createUsersTable() {
-        Session session = Util.getSessionFactory().openSession();
-        String SQL = "CREATE TABLE IF NOT EXISTS users " +
-                "(Id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "name VARCHAR(50), " +
-                "lastName VARCHAR(50), " +
-                "age INTEGER not NULL, " +
-                "PRIMARY KEY (id))";
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
+        String SQL = "CREATE TABLE IF NOT EXISTS users " +
+                "(id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL, " +
+                "name VARCHAR(20) NOT NULL, " +
+                "lastName VARCHAR(20) NOT NULL, " +
+                "age INTEGER NOT NULL)";
+
         session.createSQLQuery(SQL).executeUpdate();
         transaction.commit();
         System.out.println("Table successfully created...");
@@ -33,7 +36,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void dropUsersTable() {
-        Session session = Util.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         session.createSQLQuery("DROP TABLE IF EXISTS users").executeUpdate();
         transaction.commit();
@@ -43,7 +46,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        Session session = Util.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         session.save(new User(name, lastName, age));
         transaction.commit();
@@ -52,9 +55,9 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
-        Session session = Util.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
-        User user = (User) session.load(User.class, id);
+        User user = session.load(User.class, id);
         session.delete(user);
         session.flush();
         transaction.commit();
@@ -63,16 +66,21 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public List<User> getAllUsers() {
-        Session session = Util.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
-        List<User> list = session.createCriteria(User.class).list();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<User> criteria = builder.createQuery(User.class);
+        Root<User> root = criteria.from(User.class);
+        criteria.select(root);
+        List<User> list = session.createQuery(criteria).getResultList();
+        ;
         transaction.commit();
         return list;
     }
 
     @Override
     public void cleanUsersTable() {
-        Session session = Util.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         session.createQuery("delete from User").executeUpdate();
         transaction.commit();
